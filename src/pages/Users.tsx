@@ -9,20 +9,38 @@ import {
 import { useGetUsersQuery } from "../api/usersApi";
 import UserCard from "../components/UserCard/UserCard";
 import { User } from "../Interfaces/User";
-import { Add } from "@mui/icons-material";
-import { useState } from "react";
+import { Add, ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { useEffect, useState } from "react";
 import UserForm from "../components/UserForm/UserForm";
+import { useSearchParams } from "react-router-dom";
 
 const Users = () => {
-  const { data, isLoading } = useGetUsersQuery("");
   const [userEdit, setUserEdit] = useState<User | null>(null);
   const [openModal, setOpenModal] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [params, setSearchParams] = useSearchParams();
+  const { data, isLoading } = useGetUsersQuery(
+    `pageSize=10&pageNumber=${params.get("page") || 1}`
+  );
 
   // methods
   const handleCloseModal = () => {
     setOpenModal(false);
     setUserEdit(null);
   };
+
+  const handleNextPagination = () => {
+    setPageNumber((prev) => prev + 1);
+  };
+  const handlePrevPagination = () => {
+    setPageNumber((prev) => prev - 1);
+  };
+  useEffect(() => {
+      params.set("page", pageNumber.toString());
+      params.set("pageSize", "10");
+      setSearchParams(params);
+  }, [pageNumber]);
+
   return (
     <Box my={2}>
       {isLoading && (
@@ -58,13 +76,46 @@ const Users = () => {
       </Box>
 
       {data && data?.length > 0 && (
-        <Grid container spacing={2}>
-          {data?.map((user: User) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={user.id}>
-              <UserCard user={user} setUserEdit={setUserEdit} setOpenModal={setOpenModal} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={2}>
+            {data?.map((user: User) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={user.id}>
+                <UserCard
+                  user={user}
+                  setUserEdit={setUserEdit}
+                  setOpenModal={setOpenModal}
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* i need arrow to pagination */}
+          {data.length > 9 && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: "1rem",
+                my: 2,
+              }}
+            >
+              <ButtonBase
+                onClick={ handlePrevPagination}
+                disabled={pageNumber <= 1}
+              >
+                <ArrowBackIos
+                  sx={{
+                    color: pageNumber <= 1 ? "#ccc" : "#000",
+                  }}
+                />
+              </ButtonBase>
+              <ButtonBase onClick={handleNextPagination}>
+                <ArrowForwardIos />
+              </ButtonBase>
+            </Box>
+          )}
+        </>
       )}
 
       {data && data?.length === 0 && (
@@ -86,7 +137,7 @@ const Users = () => {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <UserForm userEdit={userEdit} handleCloseModal={handleCloseModal}/>
+        <UserForm userEdit={userEdit} handleCloseModal={handleCloseModal} />
       </Modal>
     </Box>
   );
