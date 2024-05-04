@@ -20,7 +20,7 @@ const Users = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [params, setSearchParams] = useSearchParams();
   const { data, isLoading } = useGetUsersQuery(
-    `pageSize=10&pageNumber=${params.get("page") || 1}`
+    params.toString() || "pageSize=10&pageNumber=1"
   );
 
   // methods
@@ -36,11 +36,12 @@ const Users = () => {
     setPageNumber((prev) => prev - 1);
   };
   useEffect(() => {
-      params.set("page", pageNumber.toString());
-      params.set("pageSize", "10");
-      setSearchParams(params);
+    params.set("page", pageNumber.toString());
+    params.set("pageSize", "10");
+    setSearchParams(params);
   }, [pageNumber]);
 
+  const totalPages = Math.ceil(data?.length ? data.length / 10 : 0);
   return (
     <Box my={2}>
       {isLoading && (
@@ -89,8 +90,7 @@ const Users = () => {
             ))}
           </Grid>
 
-          {/* i need arrow to pagination */}
-          {data.length > 9 && (
+          {totalPages > 1 && (
             <Box
               sx={{
                 display: "flex",
@@ -101,7 +101,7 @@ const Users = () => {
               }}
             >
               <ButtonBase
-                onClick={ handlePrevPagination}
+                onClick={handlePrevPagination}
                 disabled={pageNumber <= 1}
               >
                 <ArrowBackIos
@@ -110,8 +110,15 @@ const Users = () => {
                   }}
                 />
               </ButtonBase>
-              <ButtonBase onClick={handleNextPagination}>
-                <ArrowForwardIos />
+              <ButtonBase
+                onClick={handleNextPagination}
+                disabled={pageNumber >= totalPages}
+              >
+                <ArrowForwardIos
+                  sx={{
+                    color: pageNumber >= totalPages ? "#ccc" : "#000",
+                  }}
+                />
               </ButtonBase>
             </Box>
           )}
