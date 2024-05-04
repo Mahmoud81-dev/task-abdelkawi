@@ -9,7 +9,7 @@ const BreadCrumbs = () => {
       <Link underline="hover" color="inherit" href="/">
         Home
       </Link>
-      <Typography color="text.primary">Products</Typography>
+      <Typography color="text.primary">Users</Typography>
     </Breadcrumbs>
   );
 };
